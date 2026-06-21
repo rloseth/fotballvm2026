@@ -1,0 +1,11 @@
+# Environments
+.venv/
+.venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# OS generated files
+.DS_Store
