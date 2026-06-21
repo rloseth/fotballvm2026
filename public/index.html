@@ -1,257 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WC 2026 - Anti Spoiler Central</title>
     <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #ffffff;
-            --text-muted: #a0a0a0;
-            --accent: #ff4757;
-        }
+      :root {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #ffffff;
+        --text-muted: #a0a0a0;
+        --border-color: #333333;
+      }
 
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.5;
-        }
+      * {
+        box-sizing: border-box;
+      }
 
-        h1 {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-        }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        max-width: 600px; /* Perfekt for mobil og smale desktop-vinduer */
+        margin: 0 auto;
+        padding: 15px;
+        line-height: 1.5;
+      }
 
-        .controls {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
+      h1 {
+        text-align: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        font-size: 1.5rem;
+      }
 
-        .controls label {
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      .controls {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+        padding: 12px;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
 
-        .date-group {
-            margin-top: 30px;
-        }
+      .controls label {
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+      }
 
-        .date-header {
-            background-color: #2c2c2c;
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
+      .date-group {
+        margin-top: 25px;
+      }
 
-        .match {
-            background-color: var(--card-bg);
-            border: 1px solid #333;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .date-header {
+        background-color: #2c2c2c;
+        padding: 8px 12px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
 
-        .match-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-        }
+      .match {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        margin-bottom: 12px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Holder hjørnene runde */
+      }
 
-        .time {
-            color: var(--text-muted);
-            font-family: monospace;
-            font-size: 1.1em;
-        }
+      .match-meta {
+        display: flex;
+        justify-content: space-between;
+        background-color: #171717;
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
 
-        .channel {
-            background-color: #333;
-            color: var(--text-muted);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-        }
+      .match-teams {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 15px 12px;
+      }
 
-        .teams-score {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex: 2;
-            font-size: 1.2em;
-            gap: 15px;
-        }
+      .team {
+        font-weight: bold;
+        font-size: 1rem;
+        word-wrap: break-word; /* Hvis et land har absurd langt navn */
+      }
 
-        .team {
-            flex: 1;
-        }
+      .team.home {
+        text-align: right;
+      }
 
-        .team.home {
-            text-align: right;
-        }
+      .team.away {
+        text-align: left;
+      }
 
-        .team.away {
-            text-align: left;
-        }
+      .score-box {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        text-align: center;
+        min-width: 65px;
+        background-color: #000;
+      }
 
-        .score-box {
-            background-color: #000;
-            padding: 5px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            min-width: 50px;
-            text-align: center;
-        }
+      /* Spoiler Magic - The QA Redacted Version */
+      .hidden-score {
+        background-color: #333333;
+        color: transparent;
+        user-select: none;
+        position: relative;
+        transition: all 0.2s ease;
+      }
 
-        /* Spoiler Magic - The QA Redacted Version */
-        .hidden-score {
-            background-color: #333333;
-            color: transparent;
-            user-select: none;
-            border-radius: 4px;
-            position: relative;
-            transition: all 0.2s ease;
-        }
+      .hidden-score::after {
+        content: "???";
+        color: #888;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+      }
 
-        /* Optional: Adds a little lock icon or text pattern when hidden */
-        .hidden-score::after {
-            content: "???";
-            color: #777;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.8em;
-            letter-spacing: 2px;
-        }
+      .revealed-score {
+        background-color: #000;
+        color: var(--text-main);
+        transition: all 0.2s ease;
+      }
 
-        .revealed-score {
-            background-color: transparent;
-            color: var(--text-main);
-            transition: all 0.2s ease;
-        }
-
-        .revealed-score::after {
-            display: none;
-        }
+      .revealed-score::after {
+        display: none;
+      }
     </style>
-</head>
-
-<body>
-    <h1>🏆 World Cup 2026 Schedule</h1>
+  </head>
+  <body>
+    <h1>🏆 World Cup 2026</h1>
 
     <div class="controls">
-        <label>
-            <input type="checkbox" id="spoilerToggle" />
-            🚨 SHOW RESULTS (Danger Zone)
-        </label>
+      <label>
+        <input type="checkbox" id="spoilerToggle" />
+        🚨 VIS RESULTATER
+      </label>
     </div>
 
-    <div id="app">Loading matches...</div>
+    <div id="app">Laster kamper...</div>
 
     <script>
-        const app = document.getElementById("app");
-        const toggle = document.getElementById("spoilerToggle");
+      const app = document.getElementById("app");
+      const toggle = document.getElementById("spoilerToggle");
 
-        async function init() {
-            try {
-                // Fetch the JSON generated by your Python script
-                const response = await fetch("matches.json");
-                const daysData = await response.json();
+      async function init() {
+        try {
+          const response = await fetch("matches.json");
+          const daysData = await response.json();
 
-                if (!daysData || daysData.length === 0) {
-                    app.innerHTML = "<p>No matches found.</p>";
-                    return;
-                }
+          if (!daysData || daysData.length === 0) {
+            app.innerHTML = "<p>Fant ingen kamper.</p>";
+            return;
+          }
 
-                renderMatches(daysData);
-                setupToggle();
-            } catch (error) {
-                app.innerHTML = `<p>Error loading matches: ${error.message}</p>`;
-            }
+          renderMatches(daysData);
+          setupToggle();
+        } catch (error) {
+          app.innerHTML = `<p>Kunne ikke laste data: ${error.message}</p>`;
         }
+      }
 
-        function renderMatches(daysData) {
-            let html = "";
+      function renderMatches(daysData) {
+        let html = "";
 
-            daysData.forEach((day) => {
-                html += `<div class="date-group">
+        daysData.forEach((day) => {
+          html += `<div class="date-group">
             <h2 class="date-header">📅 ${day.date}</h2>`;
 
-                day.matches.forEach((match) => {
-                    const isCompleted = match.status === "completed";
-                    const scoreText = isCompleted
-                        ? `${match.home_score} - ${match.away_score}`
-                        : "vs";
+          day.matches.forEach((match) => {
+            const isCompleted = match.status === "completed";
+            const scoreText = isCompleted
+              ? `${match.home_score} - ${match.away_score}`
+              : "vs";
 
-                    // If it's completed, hide the score by default
-                    const scoreClass = isCompleted ? "hidden-score score" : "score";
+            const scoreClass = isCompleted ? "hidden-score score" : "score";
+            
+            let statusIcon = "⏳ Kommende";
+            if (isCompleted) statusIcon = "✅ Ferdig";
+            if (match.status === "in_progress") statusIcon = "🔄 Pågår";
 
-                    // Format status
-                    let statusIcon = "⏳";
-                    if (isCompleted) statusIcon = "✅";
-                    if (match.status === "in_progress") statusIcon = "🔄";
-
-                    html += `
+            // Det nye oppsettet:
+            // 1. match-meta for info (topp-stripe)
+            // 2. match-teams for (hjemme - score - borte)
+            html += `
               <div class="match">
-                <div class="match-info">
-                  <span class="time">🕒 ${match.time}</span>
-                  <span class="channel">📺 ${match.channel}</span>
+                <div class="match-meta">
+                  <span>🕒 ${match.time}</span>
+                  <span>📺 ${match.channel}</span>
                   <span title="${match.status}">${statusIcon}</span>
                 </div>
                 
-                <div class="teams-score">
-                  <span class="team home"><strong>${match.home}</strong></span>
+                <div class="match-teams">
+                  <div class="team home">${match.home}</div>
                   <div class="score-box ${scoreClass}">${scoreText}</div>
-                  <span class="team away"><strong>${match.away}</strong></span>
+                  <div class="team away">${match.away}</div>
                 </div>
               </div>
             `;
-                });
+          });
 
-                html += `</div>`;
-            });
+          html += `</div>`;
+        });
 
-            app.innerHTML = html;
-        }
+        app.innerHTML = html;
+      }
 
-        function setupToggle() {
-            toggle.addEventListener("change", (e) => {
-                const scores = document.querySelectorAll(".score.hidden-score, .score.revealed-score");
-                scores.forEach((el) => {
-                    if (e.target.checked) {
-                        el.classList.remove("hidden-score");
-                        el.classList.add("revealed-score");
-                    } else {
-                        el.classList.add("hidden-score");
-                        el.classList.remove("revealed-score");
-                    }
-                });
-            });
-        }
+      function setupToggle() {
+        toggle.addEventListener("change", (e) => {
+          const scores = document.querySelectorAll(".score.hidden-score, .score.revealed-score");
+          scores.forEach((el) => {
+            if (e.target.checked) {
+              el.classList.remove("hidden-score");
+              el.classList.add("revealed-score");
+            } else {
+              el.classList.add("hidden-score");
+              el.classList.remove("revealed-score");
+            }
+          });
+        });
+      }
 
-        // Boot it up
-        init();
+      init();
     </script>
-</body>
-
+  </body>
 </html>
