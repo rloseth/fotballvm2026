@@ -31,7 +31,7 @@ jobs:
           pip install requests
 
       - name: Run TV2 Scraper
-        run: python updater.py
+        run: python world_cup_scraper.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
