@@ -1,24 +1,23 @@
 import argparse
 import json
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 def fetch_match_data():
     """
     Fetches the match data.
-    For this example, we assume you saved the JSON provided to a file named 'data.json'.
-    In a real scenario, you uncomment the requests logic below.
     """
     import requests
-    URL = "https://tv2no-livesport-api.public.tv2.no/v3/football/seasons/a315b842-f4bc-5687-9ecb-3e06d6acdf9a/matchesByDates" 
+    URL = "https://tv2no-livesport-api.public.tv2.no/v3/football/seasons/a315b842-f4bc-5687-9ecb-3e06d6acdf9a/matchesByDates"
     response = requests.get(URL)
     response.raise_for_status()
     return response.json()
 
 def format_time_to_oslo(utc_time_str):
     """
-    Converts a UTC time string (e.g., '2026-06-11T19:00:00Z') to Europe/Oslo timezone.
-    Returns just the time (HH:MM) since the date is already known from the grouping.
+    Converts a UTC time string to Europe/Oslo timezone.
+    Returns just the time (HH:MM).
     """
     if not utc_time_str:
         return "TBA"
@@ -28,9 +27,19 @@ def format_time_to_oslo(utc_time_str):
     oslo_time = utc_time.astimezone(ZoneInfo("Europe/Oslo"))
     return oslo_time.strftime("%H:%M")
 
+def get_channel(broadcast):
+    """Parses broadcast data to determine channel."""
+    if not isinstance(broadcast, dict) or len(broadcast) < 4:
+        return "N/D"
+    if broadcast.get("isTV2") is True:
+        return "TV2"
+    elif broadcast.get("isNRK") is True:
+        return "NRK"
+    return "N/D"
+
 def display_matches(days_data, show_results):
     """
-    Parses and prints the matches, grouped by day, filtering results based on user preference.
+    Parses and prints the matches to terminal.
     """
     print("=" * 80)
     print(" 🏆 WORLD CUP 2026 SCHEDULE (US/CAN/MEX) 🏆 ".center(80))
@@ -47,7 +56,6 @@ def display_matches(days_data, show_results):
             continue
 
         for match in matches:
-            # Extract safe defaults in case some data is missing
             teams = match.get("teams", [])
             if len(teams) < 2:
                 continue
@@ -56,42 +64,80 @@ def display_matches(days_data, show_results):
             away_team = teams[1].get("name", "Unknown")
             status = match.get("statusType", "UNKNOWN")
             
-            # Format time
             time_oslo = format_time_to_oslo(match.get("startTime"))
             
-            # Base string for the match
             match_str = f"  🕒 {time_oslo} | {home_team} vs. {away_team}"
-            
-            # Pad the string so results align nicely in the CLI
             match_str = match_str.ljust(45)
 
-            broadcast = match.get("broadcast", "N/D")
-            if len(broadcast) < 4:
-                channel = "N/D"
-            else:
-                if broadcast.get("isTV2") == True:
-                    channel = "TV2"
-                elif broadcast.get("isNRK") == True:
-                    channel = "NRK"
-                else:
-                    channel = "N/D"
+            channel = get_channel(match.get("broadcast", "N/D"))
 
             if status == "FINISHED":
                 if show_results:
-                    # Parse scores - fallback to '0' if it fails
                     home_score = teams[0].get("score", {}).get("total", "0") if teams[0].get("score") else "0"
                     away_score = teams[1].get("score", {}).get("total", "0") if teams[1].get("score") else "0"
-                    match_str += f"| ✅ RESULT: {home_score} - {away_score} | 📺 " + channel
+                    match_str += f"| ✅ RESULT: {home_score} - {away_score} | 📺 {channel}"
                 else:
-                    match_str += "| 🙈 RESULT: [HIDDEN] | 📺 : " + channel
+                    match_str += f"| 🙈 RESULT: [HIDDEN] | 📺 {channel}"
             elif status == "NOT_STARTED":
-                match_str += "| ⏳ UPCOMING | 📺 " + channel
+                match_str += f"| ⏳ UPCOMING | 📺 {channel}"
             else:
-                match_str += f"| 🔄 {status}"
+                match_str += f"| 🔄 {status} | 📺 {channel}"
 
             print(match_str)
             
     print("\n" + "=" * 80)
+
+def generate_json(days_data):
+    """
+    Parses the same data into a clean structure and exports to public/matches.json
+    for the static GitHub Pages frontend.
+    """
+    export_data = []
+
+    for day in days_data:
+        date_title = day.get("title", "Unknown Date").title()
+        day_matches = []
+        
+        matches = day.get("matches", [])
+        for match in matches:
+            teams = match.get("teams", [])
+            if len(teams) < 2:
+                continue
+
+            status_raw = match.get("statusType", "UNKNOWN")
+            if status_raw == "FINISHED":
+                status = "completed"
+            elif status_raw == "NOT_STARTED":
+                status = "upcoming"
+            else:
+                status = "in_progress"
+
+            home_score = teams[0].get("score", {}).get("total", "0") if teams[0].get("score") else "0"
+            away_score = teams[1].get("score", {}).get("total", "0") if teams[1].get("score") else "0"
+
+            day_matches.append({
+                "time": format_time_to_oslo(match.get("startTime")),
+                "home": teams[0].get("name", "Unknown"),
+                "away": teams[1].get("name", "Unknown"),
+                "home_score": home_score,
+                "away_score": away_score,
+                "status": status,
+                "channel": get_channel(match.get("broadcast", "N/D"))
+            })
+            
+        if day_matches:
+            export_data.append({
+                "date": date_title,
+                "matches": day_matches
+            })
+
+    # Ensure the directory exists
+    os.makedirs("public", exist_ok=True)
+    
+    with open("public/matches.json", "w", encoding="utf-8") as f:
+        json.dump(export_data, f, indent=2, ensure_ascii=False)
+        
+    print(f"\n✅ JSON file created successfully at 'public/matches.json'!")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -100,16 +146,20 @@ def main():
     parser.add_argument(
         "--show-results",
         action="store_true",
-        help="Include this flag to show results of finished matches."
+        help="Include this flag to show results of finished matches in CLI."
     )
     
     args = parser.parse_args()
     
     try:
         data = fetch_match_data()
+        
+        # 1. Output to CLI
         display_matches(data, args.show_results)
-    except FileNotFoundError:
-        print("❌ Error: 'data.json' not found. Please save the API response to this file.")
+        
+        # 2. Output to JSON for frontend
+        generate_json(data)
+        
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
 

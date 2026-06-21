@@ -1,0 +1,40 @@
+name: Update Matches and Deploy to Pages
+
+on:
+  schedule:
+    # Runs every hour (you can tweak this cron)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows manual trigger from the UI
+
+# Allow permission to deploy to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Add pip install requests etc., if your script needs it
+      # - name: Install dependencies
+      #   run: pip install -r requirements.txt
+
+      - name: Run TV2 Scraper
+        run: python updater.py
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './public' # We deploy the public folder containing HTML and JSON
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
